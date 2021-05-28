@@ -6,26 +6,26 @@ namespace ml_clv
 {
     public class CalibrationLinesVisualizer : MelonLoader.MelonMod
     {
-        public static readonly int gc_linesCount = 8;
         public static readonly string[] gc_trackerTypes =
         {
-            "waist", "chest",
+            "waist", "left_foot", "right_foot",
             "left_elbow", "right_elbow",
             "left_knee", "right_knee",
-            "left_foot", "right_foot"
+            "chest"
         };
         public static readonly UnityEngine.HumanBodyBones[] gc_linkedBones =
         {
-            UnityEngine.HumanBodyBones.Hips, UnityEngine.HumanBodyBones.Chest,
+            UnityEngine.HumanBodyBones.Hips, UnityEngine.HumanBodyBones.LeftFoot, UnityEngine.HumanBodyBones.RightFoot,
             UnityEngine.HumanBodyBones.LeftLowerArm, UnityEngine.HumanBodyBones.RightLowerArm,
             UnityEngine.HumanBodyBones.LeftLowerLeg, UnityEngine.HumanBodyBones.RightLowerLeg,
-            UnityEngine.HumanBodyBones.LeftFoot, UnityEngine.HumanBodyBones.RightFoot
+            UnityEngine.HumanBodyBones.Chest,
         };
 
         static CalibrationLinesVisualizer ms_instance = null;
 
         bool m_enabled = true;
         bool m_calibrating = false;
+        int m_maxTrackersCount = 3;
 
         UnityEngine.Color m_lineColor = UnityEngine.Color.green;
         UnityEngine.Material m_lineMaterial = null;
@@ -78,6 +78,8 @@ namespace ml_clv
                     l_mod.Assembly.GetTypes().DoIf(t => t.Name == "CalibrationManager", t => l_cbType = t);
                     if(l_cbType != null)
                     {
+                        m_maxTrackersCount = 8;
+
                         Harmony.Patch(l_cbType.GetMethod("Calibrate"), null, new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_PrepareForCalibration)));
                         Harmony.Patch(l_cbType.GetMethod("ApplyStoredCalibration", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static), null, new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_RestoreTrackingAfterCalibration)));
 
@@ -111,7 +113,7 @@ namespace ml_clv
                 var l_animator = VRCPlayer.field_Internal_Static_VRCPlayer_0?.field_Private_VRC_AnimationController_0?.field_Private_Animator_0;
                 bool l_humanoid = ((l_animator != null) ? l_animator.isHuman : false);
 
-                for(int i = 0; i < gc_linesCount; i++)
+                for(int i = 0; i < m_maxTrackersCount; i++)
                 {
                     var l_puck = m_controllerManager.field_Public_ArrayOf_GameObject_0[i + 2];
                     if(l_puck.active)
@@ -165,7 +167,7 @@ namespace ml_clv
                         m_lineMaterial.color = m_lineColor;
                     }
 
-                    for(int i = 0; i < gc_linesCount; i++)
+                    for(int i = 0; i < m_maxTrackersCount; i++)
                     {
                         var l_line = new UnityEngine.GameObject("CLV_Line" + i).AddComponent<UnityEngine.LineRenderer>();
                         UnityEngine.Object.DontDestroyOnLoad(l_line.gameObject);
@@ -236,7 +238,7 @@ namespace ml_clv
             {
                 string l_controllerType = l_stringBuilder.ToString();
                 int l_controllerTypeId = -1;
-                for(int i = 0; i < gc_linesCount; i++)
+                for(int i = 0; i < m_maxTrackersCount; i++)
                 {
                     if(l_controllerType.Contains(gc_trackerTypes[i]))
                     {
@@ -270,7 +272,8 @@ namespace ml_clv
             }
 
             // No bone, revert to hips
-            if(l_result == UnityEngine.HumanBodyBones.LastBone) l_result = UnityEngine.HumanBodyBones.Hips;
+            if(l_result == UnityEngine.HumanBodyBones.LastBone)
+                l_result = UnityEngine.HumanBodyBones.Hips;
             return l_result;
         }
     }

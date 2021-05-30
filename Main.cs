@@ -47,9 +47,11 @@ namespace ml_clv
             System.Reflection.MethodInfo l_pfcMethod = null;
             l_pfcMethod = typeof(VRCTrackingManager).GetMethods()
                 .Where(m => (m.Name.StartsWith("Method_Public_Static_Void_") && m.ReturnType == typeof(void) && m.GetParameters().Count() == 0 && UnhollowerRuntimeLib.XrefScans.XrefScanner.XrefScan(m)
-                .Where(x => (x.Type == UnhollowerRuntimeLib.XrefScans.XrefType.Global && x.ReadAsObject().ToString().Contains("trying to calibrate"))).Any())).First();
+                .Where(x => (x.Type == UnhollowerRuntimeLib.XrefScans.XrefType.Global && x.ReadAsObject().ToString().Contains("trying to calibrate"))).Any() && UnhollowerRuntimeLib.XrefScans.XrefScanner.UsedBy(m)
+                .Where(x => (x.Type == UnhollowerRuntimeLib.XrefScans.XrefType.Method && x.TryResolve()?.DeclaringType == typeof(VRCFbbIkController))).Any())).First();
             if(l_pfcMethod != null)
             {
+                MelonLoader.MelonDebug.Msg("VRCTrackingManager." + l_pfcMethod.Name + " -> VRCTrackingManager.PrepareForCalibration");
                 Harmony.Patch(l_pfcMethod, null, new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_PrepareForCalibration)));
 
                 // VRCTracking.RestoreTrackingAfterCalibration()
@@ -59,6 +61,7 @@ namespace ml_clv
                         .Where(x => (x.Type == UnhollowerRuntimeLib.XrefScans.XrefType.Method && x.TryResolve()?.DeclaringType == typeof(VRCFbbIkController))).Any())).First();
                 if(l_rtacMethod != null)
                 {
+                    MelonLoader.MelonDebug.Msg("VRCTrackingManager." + l_rtacMethod.Name + " -> VRCTrackingManager.RestoreTrackingAfterCalibration");
                     Harmony.Patch(l_rtacMethod, null, new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_RestoreTrackingAfterCalibration)));
                 }
                 else
@@ -135,6 +138,8 @@ namespace ml_clv
         static public void Prefix_VRCTrackingManager_PrepareForCalibration() => ms_instance?.OnPrepareForCalibration();
         void OnPrepareForCalibration()
         {
+            MelonLoader.MelonDebug.Msg("OnPrepareForCalibration call");
+
             m_calibrating = true;
             foreach(var l_line in m_lines)
                 l_line.gameObject.active = true;
@@ -143,6 +148,8 @@ namespace ml_clv
         static public void Prefix_VRCTrackingManager_RestoreTrackingAfterCalibration() => ms_instance?.OnRestoreTrackingAfterCalibration();
         void OnRestoreTrackingAfterCalibration()
         {
+            MelonLoader.MelonDebug.Msg("OnRestoreTrackingAfterCalibration call");
+
             m_calibrating = false;
             foreach(var l_line in m_lines)
                 l_line.gameObject.active = false;

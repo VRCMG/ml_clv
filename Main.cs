@@ -83,8 +83,8 @@ namespace ml_clv
                     {
                         m_maxTrackersCount = 8;
 
-                        Harmony.Patch(l_cbType.GetMethod("Calibrate"), null, new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_PrepareForCalibration)));
-                        Harmony.Patch(l_cbType.GetMethod("ApplyStoredCalibration", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static), null, new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_RestoreTrackingAfterCalibration)));
+                        Harmony.Patch(l_cbType.GetMethod("Calibrate"), new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_PrepareForCalibration)), null);
+                        Harmony.Patch(l_cbType.GetMethod("ApplyStoredCalibration", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static), new Harmony.HarmonyMethod(typeof(CalibrationLinesVisualizer), nameof(Prefix_VRCTrackingManager_RestoreTrackingAfterCalibration)), null);
 
                         MelonLoader.MelonLogger.Msg("IKTweaks hooked");
                     }

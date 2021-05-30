@@ -170,7 +170,14 @@ namespace ml_clv
                 {
                     if(m_lineMaterial == null)
                     {
-                        m_lineMaterial = new UnityEngine.Material(UnityEngine.Shader.Find("Unlit/Color"));
+                        // Thank Requi for these lines
+                        m_lineMaterial = new UnityEngine.Material(UnityEngine.Shader.Find("Hidden/Internal-Colored"));
+                        m_lineMaterial.hideFlags = UnityEngine.HideFlags.HideAndDontSave;
+                        m_lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                        m_lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                        m_lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+                        m_lineMaterial.SetInt("_ZWrite", 0);
+                        m_lineMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
                         m_lineMaterial.color = m_lineColor;
                     }
 
@@ -179,6 +186,7 @@ namespace ml_clv
                         var l_line = new UnityEngine.GameObject("CLV_Line" + i).AddComponent<UnityEngine.LineRenderer>();
                         UnityEngine.Object.DontDestroyOnLoad(l_line.gameObject);
                         l_line.gameObject.active = false;
+                        l_line.gameObject.layer = 9; // Player
 
                         l_line.material = m_lineMaterial;
                         l_line.alignment = UnityEngine.LineAlignment.View;
